@@ -1,6 +1,11 @@
 public class Store {
     private String name;
     private double distance;
+    public void addItem;
+
+    public void removeItem;
+    getitem();
+    displayItems();
 
 
 }
