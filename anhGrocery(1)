@@ -4,4 +4,6 @@ public class Grocery {
     private double price;
     private String storeName;
 
+    displayItem();
+
 }
