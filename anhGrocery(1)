@@ -1,0 +1,7 @@
+public class Grocery {
+    private String name;
+    private String category;
+    private double price;
+    private String storeName;
+
+}
