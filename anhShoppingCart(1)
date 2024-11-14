@@ -1,0 +1,8 @@
+public class ShoppingCart {
+    addItem();
+    removeItem();
+    getItem();
+    getTotalPrice();
+    displayCartItems();
+    clearCart();
+}
