@@ -1,6 +1,71 @@
+import java.util.ArrayList;
+
 public class Store {
-    private String name;
+    private String name; //name of the store, which take info from subclasses SuperMart, HelloHealthy, BakedTownHeavens
     private double distance;
+    private ArrayList<Grocery> items; // use info from Grocery class to represent each item.
+
+    //constructor
+    public Store(String name, double distance) {
+        this.name = name;
+        this.distance = distance;
+        this.items = new ArrayList<>();
+    }
+
+    //getters
+    public String getName() {
+        return name;
+    }
+    public double getDistance() {
+        return distance;
+    }
+
+    //setters
+    public void setName(String name) {
+        this.name = name;
+    }
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    // Method to add an item to the store
+    public void addItem(Grocery item) {
+        items.add(item);
+        System.out.println(item.getName() + " added from" + name); //name is name of
+    }
+
+    // Method to remove an item from the store
+    public void removeItem(String itemName) {
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getName().equalsIgnoreCase(itemName)) {
+                items.remove(i);
+                System.out.println(itemName + " removed from " + name);
+                return;
+            }
+        }
+        System.out.println(itemName + " not found in " + name);
+    }
+
+    // Method to get an item by name
+    public Grocery getItem(String itemName) {
+        for (Grocery item : items) {
+            if (item.getName().equalsIgnoreCase(itemName)) {
+                return item;
+            }
+        }
+        return null; // Return null if item is not found
+    }
 
 
+    // Method to display all items in the store
+    public void displayItems() {
+        if (items.isEmpty()) {
+            System.out.println("No items available from" + name);
+        } else {
+            System.out.println("Items available from " + name + ":");
+            for (Grocery item : items) {
+                System.out.println("- " + item.getName() + " ($" + item.getPrice() + ")");
+            }
+        }
+    }
 }
