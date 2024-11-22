@@ -1,0 +1,28 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class CSVReader {
+    public static void main(String[] args) {
+        String filePath = "items.csv"; // Replace with the path to your CSV file
+        String line;
+        String delimiter = ","; // CSV file delimiter
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            // Read the header line
+            String header = br.readLine();
+            System.out.println("Header: " + header);
+
+            // Read and process each line
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(delimiter);
+                System.out.println("Item Name: " + values[0] +
+                        ", Category: " + values[1] +
+                        ", Price: $" + values[2] +
+                        ", Store Name: " + values[3]);
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading the file: " + e.getMessage());
+        }
+    }
+}
