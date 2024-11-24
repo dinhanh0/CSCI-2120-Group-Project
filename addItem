@@ -1,69 +1,97 @@
-private static void addItem(Scanner scanner) {
-    // Step 1: Load items from the CSV file
-    List<String[]> items = readCsv(ITEM_FILE); // Reads items.csv
-    if (items.isEmpty()) {
-        System.out.println("No items available to add.");
-        return;
+import java.io.*;
+import java.util.*;
+
+public class GroceryGuide {
+
+    private static final String ITEM_FILE = "items.csv"; // Path to items.csv
+    private static final String CART_FILE = "cart.csv";  // Path to store cart data
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Add Items to Cart:");
+        addItem(scanner);
     }
 
-    // Step 2: Group items by category
-    Map<String, List<String[]>> categoryMap = new LinkedHashMap<>();
-    for (String[] item : items) {
-        String category = item[1]; // Extract category (column 2 in items.csv)
-        categoryMap.computeIfAbsent(category, k -> new ArrayList<>()).add(item);
+    private static void addItem(Scanner scanner) {
+        // Step 1: Load items from the CSV file
+        List<String[]> items = readCsv(ITEM_FILE);
+        if (items.isEmpty()) {
+            System.out.println("No items available to add.");
+            return;
+        }
+
+        // Step 2: Display categories
+        Map<String, List<String[]>> categoryMap = new LinkedHashMap<>();
+        for (String[] item : items) {
+            String category = item[1]; // Category is in column 2 (index 1)
+            categoryMap.computeIfAbsent(category, k -> new ArrayList<>()).add(item);
+        }
+
+        System.out.println("Available Categories:");
+        int index = 1;
+        Map<Integer, String> categoryIndexMap = new HashMap<>();
+        for (String category : categoryMap.keySet()) {
+            System.out.println(index + ". " + category);
+            categoryIndexMap.put(index, category);
+            index++;
+        }
+
+        System.out.print("Select a category (enter number): ");
+        int categoryChoice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        String selectedCategory = categoryIndexMap.get(categoryChoice);
+        if (selectedCategory == null) {
+            System.out.println("Invalid category selection.");
+            return;
+        }
+
+        // Step 3: Display items in the selected category
+        List<String[]> selectedItems = categoryMap.get(selectedCategory);
+        System.out.println("Items in " + selectedCategory + ":");
+        index = 1;
+        Map<Integer, String[]> itemIndexMap = new HashMap<>();
+        for (String[] item : selectedItems) {
+            System.out.println(index + ". " + item[0] + " ($" + item[2] + ") from " + item[3]);
+            itemIndexMap.put(index, item);
+            index++;
+        }
+
+        System.out.print("Select an item to add to cart (enter number): ");
+        int itemChoice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        String[] selectedItem = itemIndexMap.get(itemChoice);
+        if (selectedItem == null) {
+            System.out.println("Invalid item selection.");
+            return;
+        }
+
+        // Step 4: Write selected item to the cart CSV
+        try (FileWriter fw = new FileWriter(CART_FILE, true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter pw = new PrintWriter(bw)) {
+
+            pw.println(String.join(",", selectedItem));
+            System.out.println("Item added to cart: " + selectedItem[0]);
+        } catch (IOException e) {
+            System.err.println("Error writing to cart file: " + e.getMessage());
+        }
     }
 
-    // Display available categories
-    System.out.println("Available Categories:");
-    int categoryIndex = 1;
-    Map<Integer, String> categoryIndexMap = new HashMap<>();
-    for (String category : categoryMap.keySet()) {
-        System.out.println(categoryIndex + ". " + category);
-        categoryIndexMap.put(categoryIndex, category);
-        categoryIndex++;
-    }
-
-    System.out.print("Select a category (enter number): ");
-    int categoryChoice = scanner.nextInt();
-    scanner.nextLine(); // Consume newline character
-
-    // Validate and retrieve selected category
-    String selectedCategory = categoryIndexMap.get(categoryChoice);
-    if (selectedCategory == null) {
-        System.out.println("Invalid category selection.");
-        return;
-    }
-
-    // Step 3: Display items in the selected category
-    List<String[]> selectedItems = categoryMap.get(selectedCategory);
-    System.out.println("Items in " + selectedCategory + ":");
-    int itemIndex = 1;
-    Map<Integer, String[]> itemIndexMap = new HashMap<>();
-    for (String[] item : selectedItems) {
-        System.out.println(itemIndex + ". " + item[0] + " ($" + item[2] + ") from " + item[3]);
-        itemIndexMap.put(itemIndex, item);
-        itemIndex++;
-    }
-
-    System.out.print("Select an item to add to cart (enter number): ");
-    int itemChoice = scanner.nextInt();
-    scanner.nextLine(); // Consume newline character
-
-    // Validate and retrieve selected item
-    String[] selectedItem = itemIndexMap.get(itemChoice);
-    if (selectedItem == null) {
-        System.out.println("Invalid item selection.");
-        return;
-    }
-
-    // Step 4: Append selected item to the cart CSV file
-    try (FileWriter fw = new FileWriter(CART_FILE, true);
-         BufferedWriter bw = new BufferedWriter(fw);
-         PrintWriter pw = new PrintWriter(bw)) {
-
-        pw.println(String.join(",", selectedItem)); // Write item details to cart.csv
-        System.out.println("Item added to cart: " + selectedItem[0]);
-    } catch (IOException e) {
-        System.err.println("Error writing to cart file: " + e.getMessage());
+    // Method to read a CSV file and return its data as a List of String arrays
+    private static List<String[]> readCsv(String fileName) {
+        List<String[]> data = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line = br.readLine(); // Read and skip header
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(","); // Split line by comma
+                data.add(values);
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading file: " + e.getMessage());
+        }
+        return data;
     }
 }
