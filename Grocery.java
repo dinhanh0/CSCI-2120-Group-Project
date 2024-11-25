@@ -47,23 +47,11 @@ public class Grocery {
     }
 
     // Method to display details about the grocery item
-    public boolean displayItem() {
+    public void displayItem() {
         System.out.println("Item Name: " + name);
         System.out.println("Category: " + category);
         System.out.println("Price: $" + price);
         System.out.println("Store: " + storeName);
-        return false;
     }
-
-    // Main method for testing
-    public static void main(String[] args) {
-        // Example usage
-        Grocery apple = new Grocery("Apple", "Fruits", 1.20, "Super Mart");
-        Grocery milk = new Grocery("Milk", "Dairy", 3.50, "Hello Healthy");
-
-        // Display items
-        apple.displayItem();
-        System.out.println();
-        milk.displayItem();
-    }
+    
 }
