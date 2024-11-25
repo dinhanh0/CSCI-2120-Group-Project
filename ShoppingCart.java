@@ -1,73 +1,36 @@
-import java.util.ArrayList;
+import java.util.*;
 
 public class ShoppingCart {
-    private ArrayList<Grocery> cartItems; // List to store grocery items in the cart
-    private double totalPrice;           // Total price of items in the cart
+    private List<Grocery> cartItems;
 
-    // Constructor
     public ShoppingCart() {
         this.cartItems = new ArrayList<>();
-        this.totalPrice = 0.0;
     }
 
-    // Add a grocery item to the cart
+    // Add item to cart
     public void addItem(Grocery item) {
         cartItems.add(item);
-        totalPrice += item.getPrice();
-        System.out.println(item.getName() + " added to the cart.");
     }
 
-    // Remove a grocery item from the cart by its name
+    // Remove item from cart by name
     public void removeItem(String itemName) {
-        Grocery itemToRemove = null;
-        for (Grocery item : cartItems) {
-            if (item.getName().equalsIgnoreCase(itemName)) {
-                itemToRemove = item;
-                break;
-            }
-        }
-        if (itemToRemove != null) {
-            cartItems.remove(itemToRemove);
-            totalPrice -= itemToRemove.getPrice();
-            System.out.println(itemName + " removed from the cart.");
-        } else {
-            System.out.println("Item not found in the cart.");
-        }
+        cartItems.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
     }
 
-    // Get a grocery item from the cart by its name
-    public Grocery getItem(String itemName) {
-        for (Grocery item : cartItems) {
-            if (item.getName().equalsIgnoreCase(itemName)) {
-                return item;
-            }
-        }
-        System.out.println("Item not found in the cart.");
-        return null;
-    }
-
-    // Get the total price of items in the cart
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
-    // Display all items in the cart
+    // Display cart items
     public void displayCartItems() {
         if (cartItems.isEmpty()) {
-            System.out.println("Your cart is empty.");
-        } else {
-            System.out.println("Items in your cart:");
-            for (Grocery item : cartItems) {
-                System.out.println(item.displayItem());
-            }
-            System.out.println("Total Price: $" + totalPrice);
+            System.out.println("Cart is empty.");
+            return;
+        }
+
+        for (Grocery item : cartItems) {
+            System.out.println("- " + item.getName() + " ($" + item.getPrice() + ") from " + item.getStoreName());
         }
     }
 
-    // Clear all items from the cart
-    public void clearCart() {
-        cartItems.clear();
-        totalPrice = 0.0;
-        System.out.println("Shopping cart cleared.");
+    // Calculate total price of cart
+    public double getTotalPrice() {
+        return cartItems.stream().mapToDouble(Grocery::getPrice).sum();
     }
 }
