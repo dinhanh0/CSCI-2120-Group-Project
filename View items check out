@@ -1,51 +1,65 @@
-// View items and checkout logic
-    public static void viewItemsAndCheckout(ShoppingCart cart, double budget, Scanner scanner) {
-        boolean continueShopping = true;
+// View items in the cart and handle checkout logic
+public static void viewItemsAndCheckout(ShoppingCart cart, double budget, Scanner scanner) {
+    boolean continueShopping = true;
 
-        while (continueShopping) {
-            System.out.println("\n--- View Items in Cart ---");
-            cart.displayCartItems();
+    while (continueShopping) {
+        // Display all items currently in the cart
+        System.out.println("\n--- Cart Summary ---");
+        cart.displayCartItems(); // This shows all the items in the shopping cart
+        double totalPrice = cart.getTotalPrice(); // Calculate the total price of the cart
+        System.out.println("Total Price: $" + totalPrice);
 
-            double totalPrice = cart.getTotalPrice();
-            System.out.println("Total Price: $" + totalPrice);
+        // Ask if the user is ready to check out
+        System.out.print("Are you ready to check out? (yes/no): ");
+        String readyToCheckout = scanner.nextLine();
 
-            System.out.print("Are you ready to check out? (yes/no): ");
-            String readyToCheckout = scanner.nextLine();
+        if (readyToCheckout.equalsIgnoreCase("yes")) {
+            if (totalPrice <= budget) {
+                // Successful purchase
+                double remainingBudget = budget - totalPrice; // Calculate remaining budget
+                System.out.println("You successfully bought the items!");
+                System.out.println("Remaining budget: $" + remainingBudget);
 
-            if (readyToCheckout.equalsIgnoreCase("yes")) {
-                if (totalPrice <= budget) {
-                    double remainingBudget = budget - totalPrice;
-                    System.out.println("You successfully bought the items!");
-                    System.out.println("Remaining budget: $" + remainingBudget);
-
-                    System.out.print("Would you like to continue shopping? (yes/no): ");
-                    String continueShoppingResponse = scanner.nextLine();
-                    if (continueShoppingResponse.equalsIgnoreCase("yes")) {
-                        System.out.print("Enter your new budget: $");
-                        budget = validateBudgetInput(scanner);
-                    } else {
-                        System.out.println("Thank you for shopping. Goodbye!");
-                        continueShopping = false;
-                    }
+                // Ask if the user wants to continue shopping
+                System.out.print("Would you like to continue shopping? (yes/no): ");
+                String continueResponse = scanner.nextLine();
+                if (continueResponse.equalsIgnoreCase("yes")) {
+                    // Update budget for continued shopping
+                    System.out.print("Enter your new budget: $");
+                    budget = scanner.nextDouble();
+                    scanner.nextLine(); // Consume newline
                 } else {
-                    System.out.println("You can't afford the items.");
-                    System.out.print("Would you like to remove some items? (yes/no): ");
-                    String removeItemsResponse = scanner.nextLine();
-                    if (removeItemsResponse.equalsIgnoreCase("yes")) {
-                        System.out.print("Enter the name of the item to remove: ");
-                        String itemNameToRemove = scanner.nextLine();
-                        cart.removeItem(itemNameToRemove);
-                    } else {
-                        System.out.println("You cannot proceed with the purchase.");
-                        continueShopping = false;
-                    }
+                    // End shopping
+                    System.out.println("Thank you for shopping. Goodbye!");
+                    continueShopping = false;
                 }
-            } else if (readyToCheckout.equalsIgnoreCase("no")) {
-                System.out.println("You can continue shopping or modify your cart.");
-                continueShopping = false;
             } else {
-                System.out.println("Invalid input. Please enter 'yes' or 'no'.");
+                // Budget exceeded
+                System.out.println("You can't afford these items. You are over budget by $" + (totalPrice - budget));
+
+                // Ask if the user wants to remove items
+                System.out.print("Would you like to remove some items? (yes/no): ");
+                String removeResponse = scanner.nextLine();
+                if (removeResponse.equalsIgnoreCase("yes")) {
+                    // Remove an item
+                    System.out.print("Enter the name of the item to remove: ");
+                    String itemToRemove = scanner.nextLine();
+                    cart.removeItem(itemToRemove);
+                } else {
+                    // If the user does not want to remove items, end shopping
+                    System.out.println("You cannot proceed with the purchase.");
+                    continueShopping = false;
+                }
             }
+        } else if (readyToCheckout.equalsIgnoreCase("no")) {
+            // Allow user to continue shopping or modify the cart
+            System.out.println("You can continue shopping or modify your cart.");
+            continueShopping = false;
+        } else {
+            // Handle invalid input
+            System.out.println("Invalid input. Please enter 'yes' or 'no'.");
         }
     }
+}
+
 
