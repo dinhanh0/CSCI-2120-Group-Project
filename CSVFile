@@ -1,0 +1,96 @@
+//csvfile.java
+import java.io.*; //for file handling
+import java.util.*; // for list and arraylist
+
+public class CSVFile {
+    public void createGroceryCSV() {
+        // create file name 
+        String fileName = "grocery_items.csv";
+
+        //content in csv file
+        String data = """
+                ItemName,Category,Price,StoreName
+                Cabbage,Vegetables,2.50,Super Mart
+                Kale,Vegetables,3.00,Hello Healthy
+                Carrot,Vegetables,1.50,Super Mart
+                Orange,Fruits,3.00,Hello Healthy
+                Apple,Fruits,2.00,Super Mart
+                Banana,Fruits,1.20,Hello Healthy
+                Milk,Dairy,4.00,Super Mart
+                Cheese,Dairy,5.00,Hello Healthy
+                Yogurt,Dairy,3.50,Super Mart
+                White bread,Bakery,2.50,Baked Town
+                Wheat bread,Bakery,2.70,Baked Town
+                Croissant,Bakery,3.20,Baked Town
+                Sardines,Protein,4.00,Super Mart
+                Beef,Protein,10.00,Super Mart
+                Salmon,Protein,12.00,Hello Healthy
+                Canned tomato,Canned Items,1.20,Super Mart
+                Canned Pickle,Canned Items,2.00,Super Mart
+                Canned Beans,Canned Items,1.50,Hello Healthy
+                Frozen corn,Frozen,2.50,Super Mart
+                Frozen chicken nuggets,Frozen,6.00,Hello Healthy
+                Frozen pizza,Frozen,7.00,Super Mart
+                Cough drops,Health,3.00,Hello Healthy
+                Ibuprofen,Health,5.00,Super Mart
+                Pain relievers,Health,6.50,Super Mart
+                Shampoo,Personal Care,7.00,Hello Healthy
+                Acne cleanser,Personal Care,6.00,Hello Healthy
+                Moisturizer,Personal Care,8.00,Hello Healthy
+                """;
+
+        // write data to csv file
+        try (FileWriter writer = new FileWriter(fileName)) {
+            writer.write(data);
+            System.out.println("CSV file created successfully: " + fileName);
+        } catch (IOException e) {
+            System.err.println("An error occurred while creating the CSV file: " + e.getMessage());
+        }
+
+    }
+
+    public void createStoreCSV() {
+        String fileName2 = "stores.csv";
+        String data = """
+                StoreName,Distance(miles)
+                SuperMart,5
+                HelloHealthy,10
+                BakedTown,15
+                """;
+        // write data to csv file
+        try (FileWriter writer = new FileWriter(fileName2)) {
+            writer.write(data);
+            System.out.println("CSV file created successfully: " + fileName2);
+            
+            //check if file is correctly formated
+        } catch (IOException e) {
+            System.err.println("An error occurred while creating the CSV file: " + e.getMessage());
+
+
+        }
+    }
+
+    //read store.csv data
+    public List<Store> readStoreData() {
+        List<Store> stores = new ArrayList<>();
+        String fileName = "stores.csv";
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            br.readLine();  //skip the header line
+
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(","); //comma separated
+                String storeName = data[0].trim();
+                double distance = Double.parseDouble(data[1].trim());
+                stores.add(new Store(storeName, distance));
+            }
+            
+            //check if file is correctly formated
+        } catch (IOException e) {
+            System.err.println("Error reading store data: " + e.getMessage());
+        }
+
+        return stores;
+    }
+}
