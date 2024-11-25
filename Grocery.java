@@ -1,3 +1,7 @@
+
+// this class represents a grocery item with attributes such as name, category, price, and store name
+
+
 public class Grocery {
     private String name;         // the name of the item 
     private String category;     // the category of the item 
