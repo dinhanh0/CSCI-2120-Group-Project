@@ -1,261 +1,94 @@
+//Main.java
+
 import java.io.*;
 import java.util.*;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
+        // Create CSV files
+        CSVFile csvFile = new CSVFile();
+        csvFile.createGroceryCSV();
+        csvFile.createStoreCSV();
+
+        // Read store data into a list
+        List<String[]> stores = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("stores.csv"))) {
+            reader.readLine(); // Skip header
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stores.add(line.split(","));
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading stores file: " + e.getMessage());
+            return;
+        }
+
         Scanner scanner = new Scanner(System.in);
+        System.out.println("Hello, welcome to the grocery guide!");
+        System.out.print("Input your shopping budget: ");
+        double budget = scanner.nextDouble();
 
-        // Step 1: Load stores and items from CSV files
-        List<Store> stores = loadStores("/Users/samekiflu/IdeaProjects/final_projectdemo2/src/Store.csv");
-        loadItems("/Users/samekiflu/IdeaProjects/final_projectdemo2/src/Items.csv", stores);
+        ShoppingCart cart = new ShoppingCart(); // Create a shopping cart
 
-        // Step 2: Welcome message
-        System.out.println("Hello, welcome to the Grocery Guide!");
+        while (true) {
+            System.out.println("Menu:");
+            System.out.println("1. Select a Store");
+            System.out.println("2. View Items in Cart");
+            System.out.println("3. Exit");
+            System.out.print("Your choice: ");
+            int menuChoice = scanner.nextInt();
 
-        // Step 3: Get the user's desired range
+            switch (menuChoice) {
+                case 1 -> selectStore(scanner, stores, budget, cart); // Select a store and add items
+                case 2 -> {
+                    cart.displayCartItems(); // View items in the cart
+                    System.out.println("Total Price: $" + cart.getTotalPrice());
+                    System.out.print("Are you done shopping? (yes/no): ");
+                    String done = scanner.next();
+                    if (done.equalsIgnoreCase("yes")) {
+                        System.out.println("Thank you for shopping! Goodbye.");
+                        return; // Exit the program
+                    }
+                }
+                case 3 -> {
+                    System.out.println("Thank you for using the Grocery Guide!");
+                    return; // Exit the program
+                }
+                default -> System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void selectStore(Scanner scanner, List<String[]> stores, double budget, ShoppingCart cart) {
         System.out.print("Input your desired range (in miles): ");
-        double radius = validateRangeInput(scanner);
+        int range = scanner.nextInt();
 
-        // Step 4: Filter stores by radius
-        List<Store> filteredStores = filterStoresByRadius(stores, radius);
-        if (filteredStores.isEmpty()) {
-            System.out.println("No stores found within " + radius + " miles.");
-            System.exit(0); // Exit if no stores are found
-        }
-
-        System.out.println("\nStores within " + radius + " miles:");
-        for (int i = 0; i < filteredStores.size(); i++) {
-            System.out.println((i + 1) + ". " + filteredStores.get(i).getName());
-        }
-
-        // Step 5: Get the user's budget
-        System.out.print("\nEnter your budget: $");
-        double budget = validateBudgetInput(scanner);
-
-        // Step 6: Allow the user to choose a store
-        System.out.print("\nChoose a store by entering its number: ");
-        int storeChoice = validateStoreChoice(scanner, filteredStores);
-        Store selectedStore = filteredStores.get(storeChoice - 1);
-
-        System.out.println("\nYou selected: " + selectedStore.getName());
-
-        // Step 7: Create an empty shopping cart
-        ShoppingCart cart = new ShoppingCart();
-
-        // Step 8: Main menu loop
-        boolean shopping = true;
-        while (shopping) {
-            System.out.println("\n--- Main Menu ---");
-            System.out.println("1. Add Items");
-            System.out.println("2. Delete Items");
-            System.out.println("3. View Items in Cart");
-            System.out.println("4. Checkout");
-            System.out.print("Enter your choice: ");
-            int choice = validateMenuChoice(scanner);
-
-            switch (choice) {
-                case 1:
-                    // Add items
-                    selectedStore.displayItems();
-                    System.out.print("Enter the name of the item to add: ");
-                    String itemNameToAdd = scanner.nextLine();
-                    Grocery itemToAdd = selectedStore.getItem(itemNameToAdd);
-                    if (itemToAdd != null) {
-                        cart.addItem(itemToAdd);
-                    } else {
-                        System.out.println("Item not found in the store.");
-                    }
-                    break;
-
-                case 2:
-                    // Delete items
-                    System.out.print("Enter the name of the item to remove: ");
-                    String itemNameToRemove = scanner.nextLine();
-                    cart.removeItem(itemNameToRemove);
-                    break;
-
-                case 3:
-                    // View items and handle checkout logic
-                    viewItemsAndCheckout(cart, budget, scanner);
-                    break;
-
-                case 4:
-                    // Exit program
-                    System.out.println("Thank you for using the Grocery Guide! Goodbye!");
-                    shopping = false; // Exit the program
-                    break;
-
-                default:
-                    System.out.println("Invalid choice. Please try again.");
+        List<String[]> availableStores = new ArrayList<>();
+        for (String[] store : stores) {
+            if (Integer.parseInt(store[1]) <= range) {
+                availableStores.add(store);
             }
         }
 
-        scanner.close();
-    }
-
-    // Load stores from a CSV file
-    public static List<Store> loadStores(String filename) {
-        List<Store> stores = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            String line = reader.readLine(); // Skip header
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length < 2) continue; // Skip invalid lines
-                String storeName = parts[0].trim();
-                double distance = Double.parseDouble(parts[1].trim());
-                stores.add(new Store(storeName, distance));
-            }
-        } catch (IOException e) {
-            System.err.println("Error loading stores: " + e.getMessage());
+        if (availableStores.isEmpty()) {
+            System.out.println("No stores found within that range.");
+            return;
         }
-        return stores;
-    }
 
-    // Load items into store inventories
-    public static void loadItems(String filename, List<Store> stores) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            String line = reader.readLine(); // Skip header
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length < 4) continue; // Skip invalid lines
-                String itemName = parts[0].trim();
-                String category = parts[1].trim();
-                double price = Double.parseDouble(parts[2].trim());
-                String storeName = parts[3].trim();
-
-                Grocery item = new Grocery(itemName, category, price, storeName);
-
-                for (Store store : stores) {
-                    if (store.getName().equalsIgnoreCase(storeName)) {
-                        store.addItem(item);
-                        break;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error loading items: " + e.getMessage());
+        System.out.println("Stores within " + range + " miles:");
+        for (int i = 0; i < availableStores.size(); i++) {
+            System.out.println((i + 1) + ". " + availableStores.get(i)[0]);
         }
-    }
 
-    // Filter stores within a radius
-    public static List<Store> filterStoresByRadius(List<Store> stores, double radius) {
-        List<Store> filteredStores = new ArrayList<>();
-        for (Store store : stores) {
-            if (store.getDistance() <= radius) {
-                filteredStores.add(store);
-            }
-        }
-        return filteredStores;
-    }
+        System.out.print("Select a store by entering its number: ");
+        int choice = scanner.nextInt();
 
-    // View items and checkout logic
-    public static void viewItemsAndCheckout(ShoppingCart cart, double budget, Scanner scanner) {
-        boolean continueShopping = true;
-
-        while (continueShopping) {
-            System.out.println("\n--- View Items in Cart ---");
-            cart.displayCartItems();
-
-            double totalPrice = cart.getTotalPrice();
-            System.out.println("Total Price: $" + totalPrice);
-
-            System.out.print("Are you ready to check out? (yes/no): ");
-            String readyToCheckout = scanner.nextLine();
-
-            if (readyToCheckout.equalsIgnoreCase("yes")) {
-                if (totalPrice <= budget) {
-                    double remainingBudget = budget - totalPrice;
-                    System.out.println("You successfully bought the items!");
-                    System.out.println("Remaining budget: $" + remainingBudget);
-
-                    System.out.print("Would you like to continue shopping? (yes/no): ");
-                    String continueShoppingResponse = scanner.nextLine();
-                    if (continueShoppingResponse.equalsIgnoreCase("yes")) {
-                        System.out.print("Enter your new budget: $");
-                        budget = validateBudgetInput(scanner);
-                    } else {
-                        System.out.println("Thank you for shopping. Goodbye!");
-                        continueShopping = false;
-                    }
-                } else {
-                    System.out.println("You can't afford the items.");
-                    System.out.print("Would you like to remove some items? (yes/no): ");
-                    String removeItemsResponse = scanner.nextLine();
-                    if (removeItemsResponse.equalsIgnoreCase("yes")) {
-                        System.out.print("Enter the name of the item to remove: ");
-                        String itemNameToRemove = scanner.nextLine();
-                        cart.removeItem(itemNameToRemove);
-                    } else {
-                        System.out.println("You cannot proceed with the purchase.");
-                        continueShopping = false;
-                    }
-                }
-            } else if (readyToCheckout.equalsIgnoreCase("no")) {
-                System.out.println("You can continue shopping or modify your cart.");
-                continueShopping = false;
-            } else {
-                System.out.println("Invalid input. Please enter 'yes' or 'no'.");
-            }
-        }
-    }
-
-    // Validate range input
-    public static double validateRangeInput(Scanner scanner) {
-        while (true) {
-            try {
-                double radius = scanner.nextDouble();
-                scanner.nextLine(); // Consume newline
-                if (radius > 0) return radius;
-                System.out.print("Please enter a valid positive number: ");
-            } catch (InputMismatchException e) {
-                System.out.print("Invalid input. Please enter a valid number: ");
-                scanner.nextLine(); // Clear invalid input
-            }
-        }
-    }
-
-    // Validate budget input
-    public static double validateBudgetInput(Scanner scanner) {
-        while (true) {
-            try {
-                double budget = scanner.nextDouble();
-                scanner.nextLine(); // Consume newline
-                if (budget >= 0) return budget;
-                System.out.print("Please enter a valid positive number: ");
-            } catch (InputMismatchException e) {
-                System.out.print("Invalid input. Please enter a valid number: ");
-                scanner.nextLine(); // Clear invalid input
-            }
-        }
-    }
-
-    // Validate store choice
-    public static int validateStoreChoice(Scanner scanner, List<Store> stores) {
-        while (true) {
-            try {
-                int choice = scanner.nextInt();
-                scanner.nextLine(); // Consume newline
-                if (choice >= 1 && choice <= stores.size()) return choice;
-                System.out.print("Please enter a valid store number: ");
-            } catch (InputMismatchException e) {
-                System.out.print("Invalid input. Please enter a valid number: ");
-                scanner.nextLine(); // Clear invalid input
-            }
-        }
-    }
-
-    // Validate menu choice
-    public static int validateMenuChoice(Scanner scanner) {
-        while (true) {
-            try {
-                int choice = scanner.nextInt();
-                scanner.nextLine(); // Consume newline
-                if (choice >= 1 && choice <= 4) return choice;
-                System.out.print("Please enter a valid option (1-4): ");
-            } catch (InputMismatchException e) {
-                System.out.print("Invalid input. Please enter a valid number: ");
-                scanner.nextLine(); // Clear invalid input
-            }
+        if (choice > 0 && choice <= availableStores.size()) {
+            String selectedStore = availableStores.get(choice - 1)[0];
+            System.out.println("You selected: " + selectedStore);
+            AddItems.addItem(scanner, budget, selectedStore, cart);
+        } else {
+            System.out.println("Invalid choice.");
         }
     }
 }
