@@ -1,40 +1,60 @@
 import java.util.*;
 
-// this class represents a shopping cart where users can add, remove, display items, and calculate the total price
+import java.util.ArrayList;
+import java.util.List;
 
+// This class represents a shopping cart that stores items and their quantities.
 public class ShoppingCart {
-    // this is a list to store all the grocery items added to the shopping cart
-    private List<Grocery> cartItems;
+    private List<Grocery> cartItems; // Stores the grocery items added to the cart
+    private List<Integer> quantities; // Stores the quantity of each item in the cart
 
-    // this is a constructor that initializes an empty shopping cart
+    // Constructor: Initializes an empty shopping cart
     public ShoppingCart() {
         this.cartItems = new ArrayList<>();
+        this.quantities = new ArrayList<>();
     }
 
-    // this method adds item to the cart
-    public void addItem(Grocery item) {
-        cartItems.add(item);
+    // Method to add an item to the cart along with its quantity
+    public void addItem(Grocery item, int quantity) {
+        cartItems.add(item); // Add the grocery item to the cart
+        quantities.add(quantity); // Add the quantity for that item
     }
 
-    // this method removes item from the cart by name
+    // Method to remove an item from the cart by its name
     public void removeItem(String itemName) {
-        cartItems.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
+        for (int i = 0; i < cartItems.size(); i++) {
+            if (cartItems.get(i).getName().equalsIgnoreCase(itemName)) {
+                cartItems.remove(i); // Remove the item from the cart
+                quantities.remove(i); // Remove its quantity from the list
+                System.out.println(itemName + " removed from the cart.");
+                return;
+            }
+        }
+        System.out.println("Item not found in the cart."); // Inform the user if the item is not found
     }
 
-    // this method displays the cart items
+    // Method to display all items in the cart with their quantities and prices
     public void displayCartItems() {
         if (cartItems.isEmpty()) {
-            System.out.println("Cart is empty.");
+            System.out.println("Your cart is empty."); // Inform the user if the cart is empty
             return;
         }
 
-        for (Grocery item : cartItems) {
-            System.out.println("- " + item.getName() + " ($" + item.getPrice() + ") from " + item.getStoreName());
+        System.out.println("Items in your cart:");
+        for (int i = 0; i < cartItems.size(); i++) {
+            Grocery item = cartItems.get(i); // Get the grocery item
+            int quantity = quantities.get(i); // Get the quantity for this item
+            System.out.println("- " + item.getName() + " (" + quantity + " x $" + item.getPrice() + ") from " + item.getStoreName());
         }
     }
 
-    // this method calculates the total price of the cart
+    // Method to calculate the total price of the items in the cart
     public double getTotalPrice() {
-        return cartItems.stream().mapToDouble(Grocery::getPrice).sum();
+        double total = 0;
+        for (int i = 0; i < cartItems.size(); i++) {
+            total += cartItems.get(i).getPrice() * quantities.get(i); // Multiply price by quantity
+        }
+        return total; // Return the total price
     }
 }
+
