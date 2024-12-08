@@ -1,0 +1,57 @@
+import java.io.*;
+import java.util.*;
+
+public class ShoppingCart {
+    private List<Grocery> cartItems;
+
+    public ShoppingCart() {
+        this.cartItems = new ArrayList<>();
+    }
+
+    public void addItem(Grocery item) {
+        cartItems.add(item);
+    }
+
+    public void removeItem(String itemName) {
+        cartItems.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
+    }
+
+    public void displayCartItems() {
+        if (cartItems.isEmpty()) {
+            System.out.println("Cart is empty.");
+            return;
+        }
+        for (Grocery item : cartItems) {
+            System.out.println("- " + item.getName() + " ($" + item.getPrice() + ") from " + item.getStoreName());
+        }
+    }
+
+    public double getTotalPrice() {
+        return cartItems.stream().mapToDouble(Grocery::getPrice).sum();
+    }
+
+    public void checkout(String cartFileName) {
+        // Write cart items to cart.csv
+        try (FileWriter writer = new FileWriter(cartFileName)) {
+            writer.write("ItemName,Category,Price,StoreName\n"); // Write header
+            for (Grocery item : cartItems) {
+                writer.write(item.getName() + "," + item.getCategory() + "," + item.getPrice() + "," + item.getStoreName() + "\n");
+            }
+        } catch (IOException e) {
+            System.err.println("Error writing to cart file: " + e.getMessage());
+            return;
+        }
+
+        // Empty the cart
+        cartItems.clear();
+
+        // Clear the cart.csv file
+        try (FileWriter writer = new FileWriter(cartFileName, false)) {
+            writer.write(""); // Clear the file
+        } catch (IOException e) {
+            System.err.println("Error clearing the cart file: " + e.getMessage());
+        }
+
+        System.out.println("Checkout complete! Your cart is now empty.");
+    }
+}
