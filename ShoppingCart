@@ -1,57 +1,77 @@
-import java.io.*;
 import java.util.*;
+import java.io.FileWriter;
+import java.io.IOException;
 
+// this class represents a shopping cart where users can add, remove, display items, and calculate the total price
 public class ShoppingCart {
+    // this is a list to store all the grocery items added to the shopping cart
     private List<Grocery> cartItems;
 
+    // this is a constructor that initializes an empty shopping cart
     public ShoppingCart() {
         this.cartItems = new ArrayList<>();
     }
 
+    // this method adds item to the cart
     public void addItem(Grocery item) {
         cartItems.add(item);
     }
 
+    // this method removes item from the cart by name
     public void removeItem(String itemName) {
         cartItems.removeIf(item -> item.getName().equalsIgnoreCase(itemName));
     }
 
+    // this method displays the cart items
     public void displayCartItems() {
         if (cartItems.isEmpty()) {
             System.out.println("Cart is empty.");
             return;
         }
+
         for (Grocery item : cartItems) {
             System.out.println("- " + item.getName() + " ($" + item.getPrice() + ") from " + item.getStoreName());
         }
     }
 
+    // this method calculates the total price of the cart
     public double getTotalPrice() {
         return cartItems.stream().mapToDouble(Grocery::getPrice).sum();
     }
 
-    public void checkout(String cartFileName) {
-        // Write cart items to cart.csv
-        try (FileWriter writer = new FileWriter(cartFileName)) {
-            writer.write("ItemName,Category,Price,StoreName\n"); // Write header
-            for (Grocery item : cartItems) {
-                writer.write(item.getName() + "," + item.getCategory() + "," + item.getPrice() + "," + item.getStoreName() + "\n");
-            }
+    /**
+     * Clears the content of the cart.csv file after checkout.
+     *
+     * @param filePath The path to the cart.csv file. Default is "cart.csv".
+     */
+    public void clearCart(String filePath) {
+        try (FileWriter writer = new FileWriter(filePath, false)) {
+            // Overwrites the file with an empty string
+            writer.write("");
+            System.out.println("The cart file has been cleared: " + filePath);
         } catch (IOException e) {
-            System.err.println("Error writing to cart file: " + e.getMessage());
-            return;
+            System.err.println("An error occurred while clearing the cart: " + e.getMessage());
         }
-
-        // Empty the cart
-        cartItems.clear();
-
-        // Clear the cart.csv file
-        try (FileWriter writer = new FileWriter(cartFileName, false)) {
-            writer.write(""); // Clear the file
-        } catch (IOException e) {
-            System.err.println("Error clearing the cart file: " + e.getMessage());
-        }
-
-        System.out.println("Checkout complete! Your cart is now empty.");
     }
-}
+
+    // Example of checkout method where cart is cleared after checkout
+    public void checkout() {
+        System.out.println("Processing checkout...");
+
+        // Calculate total price (you can modify this as needed)
+        double totalPrice = getTotalPrice();
+        System.out.println("Total Price: $" + totalPrice);
+
+        // Clear the cart after checkout
+        clearCart("cart.csv");
+
+        System.out.println("Checkout complete! The cart has been cleared.");
+    }
+
+    public static void main(String[] args) {
+        // Example: Testing the ShoppingCart class and checkout process
+        ShoppingCart cart = new ShoppingCart();
+        
+        // Add some items to the cart
+        cart.addItem(new Grocery("Apple", 1.99, "Super Mart"));
+        cart.addItem(new Grocery("Banana", 0.9
