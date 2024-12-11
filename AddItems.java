@@ -1,3 +1,5 @@
+//additems.java
+
 import java.io.*;
 import java.util.*;
 
@@ -41,6 +43,7 @@ public class AddItems {
         }
 
         String selectedCategory = categories.get(categoryChoice - 1);
+
 
         // Filter items by both the selected store and the chosen category
         List<String[]> filteredItems = new ArrayList<>();
@@ -88,14 +91,14 @@ public class AddItems {
 
     //This function will display the cart and handles the checkout
     public static double viewCart(Scanner scanner, double budget) {
-        // Read all items that is currently in the cart
+        // Read all items that are currently in the cart
         List<String[]> cart = readCsv(CART_FILE);
         if (cart.isEmpty()) {
             System.out.println("Your cart is empty.");
             return budget;
         }
 
-        //This part will calculate the total price of items in the cart they selected the items for
+        // This part will calculate the total price of items in the cart they selected
         double totalPrice = 0;
         System.out.println("Items in your cart:");
         for (String[] item : cart) {
@@ -110,27 +113,27 @@ public class AddItems {
         String checkoutChoice = scanner.next();
 
         if ("yes".equalsIgnoreCase(checkoutChoice)) {
-            if (budget >= totalPrice) { //This part checks if the suer has more money than their total budget
+            if (budget >= totalPrice) { // Check if the user has enough budget
                 double remainingBudget = budget - totalPrice;
                 System.out.println("You successfully bought the items. Remaining budget: $" + remainingBudget);
-                System.out.print("Would you like to continue shopping? (yes/no): ");
-                if ("yes".equalsIgnoreCase(scanner.next())) {
-                    System.out.print("Enter your new budget: ");
-                    return scanner.nextDouble(); // User sets a new budget
-                } else {
-                    System.out.println("Thank you for shopping!");
-                    System.exit(0);
+
+                // Clear the cart after successful checkout
+                try (FileWriter fw = new FileWriter(CART_FILE)) {
+                    // This will overwrite the cart file with an empty state
+                    fw.write("");
+                } catch (IOException e) {
+                    System.err.println("Error clearing the cart file: " + e.getMessage());
                 }
+
+                return remainingBudget; // Return the remaining budget after purchase
             } else {
-                System.out.println("You can't afford the items. Would you like to remove some items? (yes/no): ");
-                if ("yes".equalsIgnoreCase(scanner.next())) {
-                    deleteItem(scanner); //If the user wants to remove items
-                } else {
-                    System.out.println("Continuing with current cart.");
-                }
+                System.out.println("Insufficient funds. Please remove items from your cart or increase your budget.");
             }
+        } else {
+            System.out.println("Checkout canceled. Returning to main menu.");
         }
-        return budget; //If there wasn't any changes made it returns
+
+        return budget; // Return the original budget if the user cancels the checkout
     }
 
     // This is the function to remove any items from the cart
@@ -172,7 +175,6 @@ public class AddItems {
     private static List<String[]> readCsv(String fileName) {
         List<String[]> data = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
-            br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
                 data.add(line.split(",")); // Splits each of the line into columns
