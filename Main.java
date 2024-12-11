@@ -1,4 +1,4 @@
-//Main.java
+//main.java
 import java.io.*; //import for file handling
 import java.util.*; //import for user input handling, array list and list
 
