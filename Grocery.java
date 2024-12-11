@@ -6,6 +6,7 @@ public class Grocery {
     private String category;     // the category of the item
     private double price;        // the price of the item
     private String storeName;    // the name of the store selling the item
+    private String unit;
 
     // this is the Constructor
     public Grocery(String name, String category, double price, String storeName) {
@@ -13,6 +14,8 @@ public class Grocery {
         this.category = category;
         this.price = price;
         this.storeName = storeName;
+        this.unit = unit;
+
     }
 
     // these are Getters
@@ -31,6 +34,15 @@ public class Grocery {
     public String getStoreName() {
         return storeName;
     }
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+
 
     // these are Setters
     public void setName(String name) {
