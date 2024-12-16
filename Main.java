@@ -38,7 +38,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Hello, welcome to the grocery guide!");
+        System.out.println("Hello, welcome to the college grocery guide!");
         System.out.print("Input your shopping budget: ");
         double budget = scanner.nextDouble();
 
@@ -67,7 +67,7 @@ public class Main {
 
     private static void selectStore(Scanner scanner, List<String[]> stores, double budget) {
         // Filter and display stores within the desired range
-        System.out.print("Input your desired range (in miles): ");
+        System.out.print("Input your desired range (in miles) from the college campus: ");
         int range = scanner.nextInt();
         List<String[]> availableStores = new ArrayList<>();
         System.out.println("Stores within " + range + " miles:");
