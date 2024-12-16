@@ -3,7 +3,7 @@
 import java.io.*;
 import java.util.*;
 
-public class AddItems {
+public class GroceryGuide {
 
     private static final String ITEM_FILE = "grocery_items.csv"; // Path to the item CSV file that contains all our items
     private static final String CART_FILE = "cart.csv";  // Path to where the cart is
