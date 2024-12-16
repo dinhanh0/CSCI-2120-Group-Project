@@ -54,7 +54,7 @@ public class Main {
             //handle functionalities for each options
             switch (menuChoice) {
                 case 1 -> selectStore(scanner, stores, budget);
-                case 2 -> budget = AddItems.viewCart(scanner, budget);
+                case 2 -> budget = GroceryGuide.viewCart(scanner, budget);
                 case 3 -> {
                     System.out.println("Thank you for using the Grocery Guide. Goodbye!");
                     scanner.close();
@@ -99,7 +99,7 @@ public class Main {
             System.out.println("You selected: " + selectedStore);
 
             // AddItems.csv functionality
-            AddItems.addItem(scanner, budget, selectedStore);
+            GroceryGuide.addItem(scanner, budget, selectedStore);
         } else {
             System.out.println("Invalid choice. Returning to main menu.");
         }
