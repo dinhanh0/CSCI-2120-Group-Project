@@ -1,133 +1,203 @@
+// Additems.java
+
 import java.io.*;
 import java.util.*;
 
 public class GroceryGuide {
 
-    public static void addItem(Scanner scanner, double budget, String storeName) {
-        List<String[]> items = new ArrayList<>();
+    private static final String ITEM_FILE = "grocery_items.csv"; // Path to the item CSV file that contains all our items
+    private static final String CART_FILE = "cart.csv";  // Path to where the cart is
 
-        // Read items from grocery_items.csv
-        try (BufferedReader reader = new BufferedReader(new FileReader("grocery_items.csv"))) {
-            String line;
-            boolean isFirstLine = true;
+    public static void addItem(Scanner scanner, double budget, String store) {
+        while (true) { // Loop to allow adding multiple items
+            // Read all available items from the CSV file
+            List<String[]> items = readCsv(ITEM_FILE);
 
-            while ((line = reader.readLine()) != null) {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue; // Skip header
+            // If the CSV file is empty or there are no items
+            if (items.isEmpty()) {
+                System.out.println("No items available to add.");
+                return; // Stop the function
+            }
+
+            // Collect unique categories from the items (e.g., Vegetables, Fruits)
+            List<String> categories = new ArrayList<>();
+            for (String[] item : items) {
+                if (!categories.contains(item[1])) { // item[1] is the category column
+                    categories.add(item[1]);
                 }
+            }
 
-                String[] itemData = line.split(",");
-                if (itemData.length < 3) {
-                    System.err.println("Invalid format in grocery_items.csv. Each row must have at least three columns.");
-                    continue;
+            // Display the available categories to the user
+            System.out.println("Available Categories:");
+            for (int i = 0; i < categories.size(); i++) {
+                System.out.println((i + 1) + ". " + categories.get(i));
+            }
+
+            // Ask the user to select a category
+            System.out.print("Select a category (enter number): ");
+            int categoryChoice = scanner.nextInt();
+            scanner.nextLine(); // Clear input buffer
+
+            // Validate the user's category choice
+            if (categoryChoice < 1 || categoryChoice > categories.size()) {
+                System.out.println("Invalid category selection.");
+                continue; // Restart the loop if the choice is invalid
+            }
+
+            // Get the selected category name
+            String selectedCategory = categories.get(categoryChoice - 1);
+
+            // Filter items based on the selected store and category
+            List<String[]> filteredItems = new ArrayList<>();
+            for (String[] item : items) {
+                if (item[3].equalsIgnoreCase(store) && item[1].equalsIgnoreCase(selectedCategory)) {
+                    filteredItems.add(item);
                 }
-
-                items.add(itemData);
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println("grocery_items.csv not found. Please ensure the file exists.");
-            return;
-        } catch (IOException e) {
-            System.err.println("Error reading grocery_items.csv: " + e.getMessage());
-            return;
-        }
-
-        // Display available items
-        System.out.println("Available items in " + storeName + ":");
-        for (int i = 0; i < items.size(); i++) {
-            String[] item = items.get(i);
-            System.out.println((i + 1) + ". " + item[0] + " - $" + item[1] + " per " + item[2]);
-        }
-
-        // Get user selection
-        System.out.print("Enter the number of the item you want to add to your cart: ");
-        try {
-            int choice = Integer.parseInt(scanner.nextLine());
-
-            if (choice <= 0 || choice > items.size()) {
-                System.out.println("Invalid choice. Returning to the main menu.");
-                return;
             }
 
-            String[] selectedItem = items.get(choice - 1);
-            System.out.println("You selected: " + selectedItem[0] + " ($" + selectedItem[1] + "/" + selectedItem[2] + ")");
-
-            // Get quantity
-            System.out.print("Enter the quantity you want to purchase: ");
-            int quantity = Integer.parseInt(scanner.nextLine());
-
-            if (quantity <= 0) {
-                System.out.println("Quantity must be greater than zero. Returning to the main menu.");
-                return;
+            // If no items are available in the selected category at the store
+            if (filteredItems.isEmpty()) {
+                System.out.println("No items available in the selected category at the chosen store.");
+                continue; // Restart the loop
             }
 
-            double cost = Double.parseDouble(selectedItem[1]) * quantity;
-
-            if (cost > budget) {
-                System.out.println("Insufficient budget. Item not added to your cart.");
-            } else {
-                budget -= cost;
-                System.out.println("Item added to cart! Remaining budget: $" + budget);
-                writeToCart(storeName, selectedItem[0], quantity, cost);
+            // Display the filtered items to the user
+            System.out.println("Items in " + selectedCategory + " at " + store + ":");
+            for (int i = 0; i < filteredItems.size(); i++) {
+                System.out.println((i + 1) + ". " + filteredItems.get(i)[0] + " ($" + filteredItems.get(i)[2] + " per " + filteredItems.get(i)[4] + ")");
             }
 
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter a valid number.");
+            // Ask the user to select an item
+            System.out.print("Select an item to add to the cart (enter number): ");
+            int itemChoice = scanner.nextInt();
+            scanner.nextLine(); // Clear input buffer
+
+            // Validate the user's item choice
+            if (itemChoice < 1 || itemChoice > filteredItems.size()) {
+                System.out.println("Invalid item selection.");
+                continue; // Restart the loop
+            }
+
+            // Get the selected item's details
+            String[] selectedItem = filteredItems.get(itemChoice - 1);
+
+            // Ask the user for the quantity they want to purchase
+            System.out.print("Enter the quantity for " + selectedItem[0] + " (in " + selectedItem[4] + "): ");
+            int quantity = scanner.nextInt();
+            scanner.nextLine(); // Clear input buffer
+
+            // Validate the quantity (must be at least 1)
+            if (quantity < 1) {
+                System.out.println("Invalid quantity. Must be at least 1.");
+                continue; // Restart the loop
+            }
+
+            // Calculate the total price for the selected quantity
+            double itemPrice = Double.parseDouble(selectedItem[2]);
+            double totalItemPrice = itemPrice * quantity;
+
+            // Check if the user has enough budget for the selected quantity
+            if (totalItemPrice > budget) {
+                System.out.println("You don't have enough budget to purchase " + quantity + " of " + selectedItem[0] + ".");
+                continue; // Restart the loop
+            }
+
+            // Add the selected item with quantity to the cart file
+            try (FileWriter fw = new FileWriter(CART_FILE, true);
+                 BufferedWriter bw = new BufferedWriter(fw);
+                 PrintWriter pw = new PrintWriter(bw)) {
+
+                // Append the item details and quantity to the cart file
+                pw.println(String.join(",", selectedItem) + "," + quantity); // Save item as a CSV row with quantity
+                System.out.println(quantity + " x " + selectedItem[0] + " added to cart. Total cost: $" + totalItemPrice);
+
+                // Update the budget
+                budget -= totalItemPrice;
+                System.out.println("Remaining budget: $" + budget);
+            } catch (IOException e) {
+                System.err.println("Error writing to cart file: " + e.getMessage());
+            }
+
+            // Ask if the user wants to add another item
+            System.out.print("Do you want to add another item? (yes/no): ");
+            String continueChoice = scanner.nextLine();
+
+            if (!"yes".equalsIgnoreCase(continueChoice)) {
+                break; // Exit the loop if the user does not want to add more items
+            }
         }
     }
 
-    private static void writeToCart(String storeName, String itemName, int quantity, double cost) {
-        File cartFile = new File("cart.csv");
-        boolean fileExists = cartFile.exists();
 
-        try (FileWriter writer = new FileWriter(cartFile, true)) {
-            if (!fileExists) {
-                writer.write("Store,Item,Quantity,Cost\n"); // Write header if file doesn't exist
-            }
-
-            writer.write(storeName + "," + itemName + "," + quantity + "," + cost + "\n");
-        } catch (IOException e) {
-            System.err.println("Error writing to cart.csv: " + e.getMessage());
-        }
-    }
-
+    // This function will display the cart and handle the checkout process
     public static double viewCart(Scanner scanner, double budget) {
-        File cartFile = new File("cart.csv");
+        // Read all items currently in the cart
+        List<String[]> cart = readCsv(CART_FILE);
 
-        if (!cartFile.exists()) {
+        if (cart.isEmpty()) {
             System.out.println("Your cart is empty.");
-            return budget;
+            return budget; // Return the budget unchanged
         }
 
-        double totalCost = 0;
+        // Display the items in the cart
+        double totalPrice = 0;
         System.out.println("Items in your cart:");
+        for (String[] item : cart) {
+            if (item.length < 6) {
+                System.out.println("Cart contains incomplete item data. Skipping entry.");
+                continue; // Skip incomplete entries
+            }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(cartFile))) {
+            String itemName = item[0];
+            double price = Double.parseDouble(item[2]);
+            int quantity = Integer.parseInt(item[5]); // Get the quantity column
+            double itemTotalPrice = price * quantity;
+            totalPrice += itemTotalPrice;
+            System.out.println(quantity + " x " + itemName + " ($" + price + " each) = $" + itemTotalPrice);
+        }
+
+        // Show the total price of the cart
+        System.out.println("Total Price: $" + totalPrice);
+
+        // Ask the user if they are ready to check out
+        System.out.print("Are you ready to check out? (yes/no): ");
+        String checkoutChoice = scanner.next();
+
+        if ("yes".equalsIgnoreCase(checkoutChoice)) {
+            if (budget >= totalPrice) { // Check if the user has enough budget
+                double remainingBudget = budget - totalPrice;
+                System.out.println("Checkout successful! Remaining budget: $" + remainingBudget);
+
+                // Clear the cart after successful checkout
+                try (FileWriter fw = new FileWriter(CART_FILE)) {
+                    fw.write(""); // Overwrite the cart file with an empty state
+                } catch (IOException e) {
+                    System.err.println("Error clearing the cart: " + e.getMessage());
+                }
+
+                return remainingBudget; // Return the remaining budget
+            } else {
+                System.out.println("Insufficient funds. Please remove items or increase your budget.");
+            }
+        } else {
+            System.out.println("Checkout canceled. Returning to main menu.");
+        }
+
+        return budget; // Return the original budget if checkout is canceled
+    }
+
+    // This is the Function to read a CSV file and returns its content as a list
+    private static List<String[]> readCsv(String fileName) {
+        List<String[]> data = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             String line;
-            boolean isFirstLine = true;
-
-            while ((line = reader.readLine()) != null) {
-                if (isFirstLine) {
-                    isFirstLine = false;
-                    continue; // Skip header
-                }
-
-                String[] cartData = line.split(",");
-                if (cartData.length < 4) {
-                    System.err.println("Invalid format in cart.csv. Skipping entry.");
-                    continue;
-                }
-
-                System.out.println(cartData[0] + " - " + cartData[1] + " x" + cartData[2] + " ($" + cartData[3] + ")");
-                totalCost += Double.parseDouble(cartData[3]);
+            while ((line = br.readLine()) != null) {
+                data.add(line.split(",")); // Splits each line into columns
             }
         } catch (IOException e) {
-            System.err.println("Error reading cart.csv: " + e.getMessage());
+            System.err.println("Error reading file: " + e.getMessage());
         }
-
-        System.out.println("Total cost: $" + totalCost);
-        System.out.println("Remaining budget: $" + (budget - totalCost));
-        return budget - totalCost;
+        return data;
     }
 }
+
